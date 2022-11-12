@@ -1,0 +1,9 @@
+photos/*
+photos
+config.yaml
+config.yml
+config*
+__pycache__
+*.tflite
+labels.txt
+*test.py 

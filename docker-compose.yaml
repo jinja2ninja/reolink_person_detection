@@ -1,0 +1,31 @@
+version: "3.7"
+services:
+
+  detector:
+    image: detector_test:latest
+    container_name: detector_test
+    devices:
+      - /dev/apex_0:/dev/apex_0
+    environment:
+      - TZ=America/Los_Angles
+    volumes:
+      - ./app:/python
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - detector_test
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: detector
+      POSTGRES_PASSWORD: test
+      POSTGRES_DATABASE: detector
+    networks:
+      - detector_test
+
+volumes:
+  localstorage:
+
+networks:
+  detector_test:
