@@ -7,10 +7,10 @@ services:
     devices:
       - /dev/apex_0:/dev/apex_0
     environment:
-      - TZ=America/Los_Angles
+      TZ: America/Los_Angles
     volumes:
       - ./app:/python
-      - /photos:/python/photos
+      - ./photos:/python/photos
     restart: unless-stopped
     privileged: true
     networks:
@@ -20,8 +20,9 @@ services:
     restart: always
     environment:
       POSTGRES_USER: detector
-      POSTGRES_PASSWORD: test
+      POSTGRES_PASSWORD: ksljhfdsljkfhbnsldkjnsithenswtiowehrtpi4467usbngfjklhfnghjkdsgbfdk007n
       POSTGRES_DATABASE: detector
+      TZ: America/Los_Angles
     container_name: detector_db
     networks:
       - detector

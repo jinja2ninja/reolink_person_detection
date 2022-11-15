@@ -20,7 +20,7 @@ async def main():
     image =  await grab_jpeg(item, cameras[item]["ip"], cameras[item]["pass"], cameras[item]["user"], config["directory"], config["log"], config["timeout"])
     if config['method'] == "deepstack":
       logging.debug(f"using method {config['method']}")
-      detection = await detect_object_deepstack(config['deepstack_url'], image, config['labels'], config['add_labels'])
+      detection = await detect_object_deepstack(config['deepstack_url'], image, config['object'], config['add_labels'])
     elif config['method'] == "coral":
       logging.debug(f"using method {config['method']}")
       detection = await detect_object_coral(config["labels"], config["model"], image, cameras[item]["count"], cameras[item]["threshold"], config["object"], config["add_labels"])

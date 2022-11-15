@@ -20,6 +20,7 @@ def draw_objects_coral(objs, input_image, label, add_labels): # fix this up so t
       img1.line(bottom, fill ="yellow", width = 5)
       font = ImageFont.truetype("qaz.ttf", 35)
       img1.text((xmax - 100, ymax - 200), label, (155, 250, 0), font)
+      logging.debug(f"saving image")
       img.save(input_image[0])
     else:
       img = Image.open(input_image[1])
@@ -46,6 +47,7 @@ def draw_objects_deepstack(response, input_image, label_index, add_labels):
     img1.line(bottom, fill ="yellow", width = 5)
     font = ImageFont.truetype("qaz.ttf", 35)
     img1.text((xmax - 100, ymax - 200), response['predictions'][label_index]['label'], (155, 250, 0), font)
+    logging.debug(f"saving image")
     img.save(input_image[0])
   else:
     img = Image.open(input_image[1])
