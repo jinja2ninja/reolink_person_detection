@@ -6,4 +6,5 @@ config*
 __pycache__
 *.tflite
 labels.txt
-*test.py 
+*test.py
+postgres*

@@ -3,12 +3,12 @@ import asyncio
 from psycopg2 import sql
 
 
-def write_row(db_params, detection, camera):
+def write_row(db_config, detection, camera):
   conn = psycopg2.connect(
-      host=db_params["host"],
-      database=db_params["db"],
-      user=db_params["user"],
-      password=db_params["password"])
+      host=db_config["host"],
+      database=db_config["db"],
+      user=db_config["user"],
+      password=db_config["password"])
   cur = conn.cursor()
   # check if table exists
   #tablecheck = "SELECT datname FROM pg_catalog.pg_database WHERE datname = (%s);"
@@ -49,12 +49,12 @@ def write_row(db_params, detection, camera):
 
 
 # Example DB params:
-db_params = {'password': 'test', 'db': 'detector', 'host': 'db', 'user': 'detector'}
+db_config = {'password': 'test', 'db': 'detector', 'host': 'db', 'user': 'detector'}
 # Example detection:
 #detection = {"camera": "test"}
 detection = {'label': "person", 'confidence': 50, 'ymincoord': 100, 'ymaxcoord': 120, 'xmincoord': 175, 'xmaxcoord': 200, 'timestamp': "2022-11-09T05.03.06", 'filename': "2022-11-09T05.13.06.jpeg", 'success': True}
 
-#row = create_table(db_params, detection, "front_door")
+#row = create_table(db_config, detection, "front_door")
 #print(row)
 #while True:
 #  if __name__ == '__write_row__':

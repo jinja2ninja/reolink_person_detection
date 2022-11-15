@@ -108,7 +108,8 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
         detection = {'predictions': [{'x_max': xmax, 'x_min': xmin, 'y_max': ymax,  'y_min': ymin, 'label': object, 'confidence': confidence }], 'success': success}
         logging.debug(f"Detection details: {response}")
         now = input_image[2]
-        return object, confidence, ymin, ymax, xmin, xmax, now, input_image[1], success
+        #return object, confidence, ymin, ymax, xmin, xmax, now, input_image[1], success
+        return {'label': object, 'confidence': confidence, 'ymincoord': ymin, 'ymaxcoord': ymax, 'xmincoord': xmin, 'xmaxcoord': xmax, 'timestamp': now, 'filename': input_image, 'success': success}
         break
     except StopIteration:
       break

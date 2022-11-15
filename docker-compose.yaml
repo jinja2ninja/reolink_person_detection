@@ -10,10 +10,11 @@ services:
       - TZ=America/Los_Angles
     volumes:
       - ./app:/python
+      - /photos:/python/photos
     restart: unless-stopped
     privileged: true
     networks:
-      - detector_test
+      - detector
   db:
     image: postgres
     restart: always
@@ -21,11 +22,23 @@ services:
       POSTGRES_USER: detector
       POSTGRES_PASSWORD: test
       POSTGRES_DATABASE: detector
+    container_name: detector_db
     networks:
-      - detector_test
-
+      - detector
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    container_name: adminer
+    depends_on: 
+      - db
+    networks: 
+      - detector
+    ports:
+      - 8080:8080
 volumes:
   localstorage:
 
 networks:
-  detector_test:
+  detector:

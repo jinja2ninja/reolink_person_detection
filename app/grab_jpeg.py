@@ -35,6 +35,3 @@ async def grab_jpeg(camera_friendly, camera_ip, camera_pass, camera_user, direct
       filename = "null"
       filename_tmp = "null"
       return filename, filename_tmp, now, "failure"
-    
-#while True:
-#  jpeg = grab_jpeg("front_door", "192.168.6.6", "C@m3rastream", "admin", "./photos/", "DEBUG", 1)
