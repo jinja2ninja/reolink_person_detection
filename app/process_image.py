@@ -98,12 +98,10 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
       try:
         element = next(pred)
         if object not in element['label']:
-          logging.info("objects not there yo --------------------------------------------")
           logging.info(f"object is {object}")
           label_index += 1
           success = False
         elif object  in element['label']:
-          logging.info("object IS there yo --------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
           label_index += 1
           confidence = element['confidence']
           xmin = response['predictions'][label_index]['x_min']

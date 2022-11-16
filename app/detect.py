@@ -5,7 +5,7 @@ from reset_directories import reset_directories
 from process_image import detect_object_deepstack, detect_object_coral
 import logging
 from write_row import write_row
-from mqtt import publish, on_connect
+from mqtt import publish_detection, on_connect
 
 config = read_config.read_config()
 cameras = config["cameras"]
@@ -25,12 +25,17 @@ async def main():
       logging.debug(f"using method {config['method']}")
       detection = await detect_object_coral(config["labels"], config["model"], image, cameras[item]["count"], cameras[item]["threshold"], config["object"], config["add_labels"])
     logging.debug(detection)
+    
+ 
+    #except: 
+    #  logging.debug("mqtt publish not successful")
     try:
       write_row(db_config, detection, item)
       logging.debug(detection)
-      try:
-        publish(mqtt_config, item, detection)
-      except: 
+      if detection['success']:
+        pub = publish_detection(mqtt_config, item, detection)
+        logging.debug(pub)
+      else:
         pass
     except:
       logging.debug(f"no row added to database")
@@ -38,4 +43,3 @@ async def main():
 while True:
   if __name__ == '__main__':
     asyncio.run(main())
-    
