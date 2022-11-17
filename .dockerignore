@@ -8,5 +8,4 @@ __pycache__
 labels.txt
 *test.py
 postgres*
-docker-compose.yaml
-docker-compose.yml
+postgres_data
