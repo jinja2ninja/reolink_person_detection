@@ -17,7 +17,6 @@ def read_config():
       'mqtt': {'port': os.environ['DETECTOR_MQTT_PORT'], 'user': os.environ['DETECTOR_MQTT_USER'], 'password': os.environ['DETECTOR_MQTT_PASSWORD'], 'broker': os.environ['DETECTOR_MQTT_BROKER'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},
       'directory': os.environ['DETECTOR_DIRECTORY'],
       'interval': os.environ['DETECTOR_INTERVAL'],
-      'debug': os.environ['DETECTOR_DEBUG'],
       'model': os.environ['DETECTOR_MODEL'],    
       'object': os.environ['DETECTOR_OBJECT'],
       'labels': os.environ['DETECTOR_LABELS'],

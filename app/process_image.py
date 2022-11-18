@@ -75,7 +75,7 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
               logging.debug(f"unable to delete {input_image[1]}")
 
 
-async def detect_object_deepstack(deepstack_url, input_image, object, add_labels):
+async def detect_object_deepstack(deepstack_url, input_image, object, add_labels, threshold):
   try:
     image_data = open(input_image[1],"rb").read()
   except FileNotFoundError:
@@ -84,7 +84,7 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
   if image_data == None:
     return
   else:
-    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data}).json()
+    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},min_confidence={threshold}).json()
     logging.debug(f"response from deepstack was: {response}")
     label_index = -1
     try: 
