@@ -24,7 +24,7 @@ def write_row(db_config, detection, camera):
       create table {camera} (
         filename   VARCHAR PRIMARY KEY NOT NULL,
         label      VARCHAR,
-        confidence INT,
+        confidence REAL,
         ymincoord       INT,
         ymaxcoord       INT,
         xmincoord       INT,

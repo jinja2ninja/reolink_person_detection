@@ -29,7 +29,7 @@ def read_config():
       }
     for item in os.environ:
       if "DETECTOR_CAMERA_" in item:
-        config['cameras'][(item.lstrip("DETECTOR_CAMERA_")).lower()] = json.loads(os.environ[item]) #.lstrip('\"').rstrip('\"')
+        config['cameras'][(item.replace("DETECTOR_CAMERA_" , "").lower())] = json.loads(os.environ[item]) #.lstrip('\"').rstrip('\"')
         logging.debug(config)
   elif not config_from_env:
     with open('config.yaml') as f:
