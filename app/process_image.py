@@ -84,7 +84,7 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
   if image_data == None:
     return
   else:
-    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},min_confidence={threshold}).json()
+    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},data={"min_confidence": threshold}).json()
     logging.debug(f"response from deepstack was: {response}")
     label_index = -1
     try: 
@@ -92,13 +92,13 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
     except KeyError:
         logging.warning("invalid response from deepstack, waiting 10 seconds and trying again")
         sleep(10)
-        response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},min_confidence={threshold}).json()
+        response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},data={"min_confidence": threshold}).json()
         pred = iter(response['predictions'])
     while True:
       try:
         element = next(pred)
         if object not in element['label']:
-          logging.info(f"object is {object}")
+          logging.debug(f"object is {object}")
           label_index += 1
           success = False
         elif object  in element['label']:
@@ -118,7 +118,7 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
           logging.debug(f"Detection details: {response}")
           now = input_image[2]
           #return object, confidence, ymin, ymax, xmin, xmax, now, input_image[1], success
-          return {'label': object, 'confidence': confidence, 'ymincoord': ymin, 'ymaxcoord': ymax, 'xmincoord': xmin, 'xmaxcoord': xmax, 'timestamp': now, 'filename': input_image, 'success': success}
+          return {'label': object, 'confidence': confidence, 'ymincoord': ymin, 'ymaxcoord': ymax, 'xmincoord': xmin, 'xmaxcoord': xmax, 'timestamp': now, 'filename': input_image[0], 'success': success}
           break
       except StopIteration:
         break
