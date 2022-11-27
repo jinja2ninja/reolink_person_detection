@@ -1,0 +1,71 @@
+version: "3.7"
+services:
+
+  detector:
+    image: detector_test:latest
+    container_name: detector_test
+    devices:
+      - /dev/apex_0:/dev/apex_0
+    environment:
+      TZ: "America/Los_Angeles"
+      DETECTOR_CONFIG_METHOD: "env"
+      DETECTOR_DB: "detector"
+      DETECTOR_DB_HOST: "db"
+      DETECTOR_DB_PASS: "detector"
+      DETECTOR_DB_USER: "detector"
+      DETECTOR_MQTT_BROKER: 10.0.0.1
+      DETECTOR_MQTT_PORT: 1883
+      DETECTOR_MQTT_PASSWORD: "mqtt_password"
+      DETECTOR_MQTT_TOPIC: "detector" 
+      DETECTOR_MQTT_CLIENT_NAME: "detector"
+      DETECTOR_MQTT_USER: "mqtt"
+      DETECTOR_DIRECTORY: "./photos"
+      DETECTOR_INTERVAL: 1
+      DETECTOR_LOG: "DEBUG"
+      DETECTOR_MODEL: "ssdlite_mobiledet_coco_qat_postprocess_edgetpu.tflite"
+      DETECTOR_DEEPSTACK_URL: 10.0.0.12
+      DETECTOR_ADD_LABELS: "True"
+      DETECTOR_TIMEOUT: 1
+      DETECTOR_LABELS: "labels.txt"
+      DETECTOR_CAMERA_FRONT_DOOR: '{"object": "person", "threshold": 0.7, "count": 5, "interval": 1, "ip": "192.168.1.1", "user": "admin", "pass": "password"}'
+      DETECTOR_CAMERA_GATE: '{"object": "person", "threshold": 0.7, "count": 5, "interval": 1, "ip": "192.168.1.2", "user": "admin", "pass": "password"}'
+      DETECTOR_DEBUG: DEBUG
+      DETECTOR_OBJECT: person
+      DETECTOR_METHOD: coral
+    volumes:
+      - ./app:/python
+      - ./photos:/python/photos
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - detector
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: detector
+      POSTGRES_PASSWORD: detector
+      POSTGRES_DATABASE: detector
+      TZ: America/Los_Angles
+    container_name: detector_db
+    networks:
+      - detector
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    container_name: adminer
+    depends_on: 
+      - db
+    networks: 
+      - detector
+    ports:
+      - 8080:8080
+volumes:
+  localstorage:
+
+networks:
+  detector:
+volumes:
+  postgres_data:
