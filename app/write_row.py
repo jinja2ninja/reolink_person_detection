@@ -24,7 +24,7 @@ def write_row(db_config, detection, camera):
       create table {camera} (
         filename   VARCHAR PRIMARY KEY NOT NULL,
         label      VARCHAR,
-        confidence INT,
+        confidence REAL,
         ymincoord       INT,
         ymaxcoord       INT,
         xmincoord       INT,
@@ -46,16 +46,3 @@ def write_row(db_config, detection, camera):
   cur.close()
 
   return table_test
-
-
-# Example DB params:
-db_config = {'password': 'test', 'db': 'detector', 'host': 'db', 'user': 'detector'}
-# Example detection:
-#detection = {"camera": "test"}
-detection = {'label': "person", 'confidence': 50, 'ymincoord': 100, 'ymaxcoord': 120, 'xmincoord': 175, 'xmaxcoord': 200, 'timestamp': "2022-11-09T05.03.06", 'filename': "2022-11-09T05.13.06.jpeg", 'success': True}
-
-#row = create_table(db_config, detection, "front_door")
-#print(row)
-#while True:
-#  if __name__ == '__write_row__':
-#    asyncio.run(main())

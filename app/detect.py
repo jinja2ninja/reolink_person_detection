@@ -27,9 +27,9 @@ async def main():
       logging.debug(f"using method {config['method']}")
       detection = await detect_object_coral(config["labels"], config["model"], image, cameras[item]["count"], cameras[item]["threshold"], config["object"], config["add_labels"])
     logging.debug(detection)
-    
- 
-    #except: 
+
+
+    #except:
     #  logging.debug("mqtt publish not successful")
     try:
       write_row(db_config, detection, item)

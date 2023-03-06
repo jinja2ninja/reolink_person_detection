@@ -28,7 +28,7 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
   if image == "null":
     success = False
     logging.debug(f"invalid image from camera")
-    os.remove(input_image[1])  
+    os.remove(input_image[1])
   else:
     _, scale = common.set_resized_input(
         interpreter, image.size, lambda size: image.resize(size, Image.ANTIALIAS))
@@ -36,7 +36,7 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
       start = time.perf_counter()
       interpreter.invoke()
       inference_time = time.perf_counter() - start
-      objs = detect.get_objects(interpreter, threshold, scale)  
+      objs = detect.get_objects(interpreter, threshold, scale)
       logging.debug(f"{objs}")
       if not objs:
         success = False
@@ -48,14 +48,14 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
         for obj in objs:
           label = (labels.get(obj.id))
           logging.debug(label)
-          if label == thing:      
+          if label == thing:
             logging.debug("yes")
             confidence = round((obj.score * 100))
             xmax = obj.bbox.xmax
             xmin = obj.bbox.xmin
             ymax =  obj.bbox.ymax
             ymin = obj.bbox.ymin
-          
+
             filename = input_image[0]
             filename_tmp = input_image[1]
             now = input_image[2]
@@ -81,20 +81,17 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
   except FileNotFoundError:
     logging.debug("image was null")
     image_data = None
-  except TypeError:
-    logging.debug("image was null")
-    image_data = None
   if image_data == None:
     return
   else:
-    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},data={"min_confidence": threshold}, timeout=5).json()
+    response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},data={"min_confidence": threshold}).json()
     logging.debug(f"response from deepstack was: {response}")
     label_index = -1
-    try: 
+    try:
         pred = iter(response['predictions'])
     except KeyError:
         logging.warning("invalid response from deepstack, waiting 10 seconds and trying again")
-        time.sleep(10)
+        sleep(10)
         response = requests.post(f"http://{deepstack_url}:5000/v1/vision/detection",files={"image":image_data},data={"min_confidence": threshold}).json()
         pred = iter(response['predictions'])
     while True:
@@ -106,7 +103,7 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
           success = False
         elif object  in element['label']:
           label_index += 1
-          confidence = round(element['confidence'] * 100)
+          confidence = element['confidence']
           xmin = response['predictions'][label_index]['x_min']
           xmax = response['predictions'][label_index]['x_max']
           ymin = response['predictions'][label_index]['y_min']
@@ -125,4 +122,3 @@ async def detect_object_deepstack(deepstack_url, input_image, object, add_labels
           break
       except StopIteration:
         break
-  
