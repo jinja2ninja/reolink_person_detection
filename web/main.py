@@ -13,7 +13,27 @@ import asyncio
 from psycopg2 import sql
 from psycopg2.extensions import AsIs
 import re
+import hvac
 
+############################
+# Hashicorp Vault Secret Retrevial
+############################
+client = hvac.Client(
+        url='https://vault.mischaf.us'
+        )
+
+client.auth.approle.login(
+    role_id=os.environ['ROLE_ID'],
+    secret_id=os.environ['SECRET_ID'],
+)
+
+secrets = client.kv.read_secret(path='detector')
+logging.info(secrets)
+secrets = client.kv.read_secret(path='detector')
+
+############################
+# Variable Declaration
+############################
 logging.basicConfig()
 logging.getLogger().setLevel("INFO")
 templates = Jinja2Templates(directory="/web/app/templates")
@@ -22,11 +42,14 @@ app.mount("/photos", StaticFiles(directory="/web/app/photos"), name="photos")
 app.mount("/templates", StaticFiles(directory="/web/app/templates"), name="templates")
 api_router = APIRouter()
 
+############################
+# Retrieve DB Rows for "latest" page
+############################
 async def read_latest_rows(camera):
   try:
-      connection = psycopg2.connect(user="detector",
-                                    password="replace",
-                                    host="db",
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
                                     port="5432",
                                     database="detector")
       cursor = connection.cursor()
@@ -44,12 +67,14 @@ async def read_latest_rows(camera):
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
-
+############################
+# Retrieve DB Rows for "detection" page
+############################
 async def read_rows(filename, camera):
   try:
-      connection = psycopg2.connect(user="detector",
-                                    password="replace",
-                                    host="db",
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
                                     port="5432",
                                     database="detector")
       cursor = connection.cursor()
@@ -91,11 +116,14 @@ async def read_rows(filename, camera):
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
+############################
+# Retrieve list of cameras from DB
+############################
 async def get_cameras():
   try:
-      connection = psycopg2.connect(user="detector",
-                                    password="ksljhfdsljkfhbnsldkjnsithenswtiowehrtpi4467usbngfjklhfnghjkdsgbfdk007n",
-                                    host="db",
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
                                     port="5432",
                                     database="detector")
       cursor = connection.cursor()
@@ -117,44 +145,23 @@ async def get_cameras():
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
+############################
+# "Latest" Page
+############################
 @app.get("/{camera}/detection/latest", response_class=HTMLResponse)
 async def latest(request: Request, camera: str):
-  
-  #filename_full = f"./photos/{camera}/{filename}.jpeg"
-  #filename_minimal = re.sub(".\/photos\/.+\/", "", filename)
   latest_rows = await read_latest_rows(camera)
   filename = latest_rows[0][0]
   cameras_list = await get_cameras()
   return templates.TemplateResponse("detection_template_latest.html", {"request": request, "cameras_list": cameras_list, "filename": filename, "latest_rows": latest_rows, "camera": camera})
 
+############################
+# "Detection" Page
+############################
 @app.get("/{camera}/detection/{filename}", response_class=HTMLResponse)
 async def detection(request: Request, filename: str, camera: str):
   filename_full = f"./photos/{camera}/{filename}.jpeg"
-  #filename_minimal = re.sub(".\/photos\/.+\/", "", filename)
   rows = await read_rows(filename_full, camera)
   cameras_list = await get_cameras()
   return templates.TemplateResponse("detection_template.html", {"request": request, "cameras_list": cameras_list, "filename": filename, "rows": rows, "camera": camera})
 
-######
-# Read Single row
-#######
-#async def read_rows(filename):
-#  try:
-#      connection = psycopg2.connect(user="detector",
-#                                    password="ksljhfdsljkfhbnsldkjnsithenswtiowehrtpi4467usbngfjklhfnghjkdsgbfdk007n",
-#                                    host="db",
-#                                    port="5432",
-#                                    database="detector")
-#      cursor = connection.cursor()
-#      cursor.execute(
-#          """
-#          SELECT *
-#          FROM test
-#          WHERE filename = %s;
-#          """,
-#          [filename,]
-#      )
-#      row = cursor.fetchone()
-#      return row
-#  except (Exception, psycopg2.Error) as error:
-#      logging.error("Error while fetching data from PostgreSQL", error)
