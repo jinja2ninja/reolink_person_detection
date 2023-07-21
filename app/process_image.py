@@ -25,7 +25,10 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
     image = "null"
   except FileNotFoundError:
       image = "null"
+  except TypeError:
+      image = "null"
   if image == "null":
+  
     success = False
     logging.debug(f"invalid image from camera")
     os.remove(input_image[1])
