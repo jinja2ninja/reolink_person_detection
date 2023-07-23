@@ -2,6 +2,7 @@ import os
 import logging
 import yaml
 import json
+from vault_secrets import get_secrets
 
 def read_config():
   logging.basicConfig()
@@ -12,9 +13,12 @@ def read_config():
   except KeyError: 
     config_from_env = False
   if config_from_env:
+    vault_address = os.environ['VAULT_ADDR']
+    secrets = get_secrets(vault_address)
+    logging.info (secrets)
     config = {
-      'database': {'password': os.environ['DETECTOR_DB_PASS'], 'user': os.environ['DETECTOR_DB_USER'], 'db': os.environ['DETECTOR_DB'], 'host': os.environ['DETECTOR_DB_HOST']}, 
-      'mqtt': {'port': os.environ['DETECTOR_MQTT_PORT'], 'user': os.environ['DETECTOR_MQTT_USER'], 'password': os.environ['DETECTOR_MQTT_PASSWORD'], 'broker': os.environ['DETECTOR_MQTT_BROKER'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},
+      'database': {'password': secrets['data']['data']['pg_pass'], 'user': secrets['data']['data']['pg_user'], 'db': os.environ['DETECTOR_DB'], 'host': secrets['data']['data']['pg_host']}, 
+      'mqtt': {'port': os.environ['DETECTOR_MQTT_PORT'], 'user': secrets['data']['data']['mqtt_user'], 'password': secrets['data']['data']['mqtt_pass'], 'broker': secrets['data']['data']['mqtt_host'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},
       'directory': os.environ['DETECTOR_DIRECTORY'],
       'interval': os.environ['DETECTOR_INTERVAL'],
       'model': os.environ['DETECTOR_MODEL'],    
