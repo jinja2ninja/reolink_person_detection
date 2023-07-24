@@ -15,8 +15,9 @@ async def grab_jpeg(camera_friendly, camera_ip, camera_pass, camera_user, direct
   except requests.exceptions.ConnectTimeout:
     response = "timeout"
 
+
   if response == "timeout":
-        logging.warning(f"Image Couldn\'t be retreived from camera {camera_friendly}, reason: timeout")
+        logging.warning(f"Image Couldn\'t be retrieved from camera {camera_friendly}, reason: timeout")
         logging.warning(f"Consider increasing the timeout variable and make sure that your connection variables are valid")
 
   elif response.status_code == 200:
@@ -29,7 +30,7 @@ async def grab_jpeg(camera_friendly, camera_ip, camera_pass, camera_user, direct
       return filename, filename_tmp, now, "success"
 
   else:
-      logging.warning(f"Image Couldn\'t be retreived from camera {camera_friendly}, reason: unknown")
+      logging.warning(f"Image Couldn\'t be retrieved from camera {camera_friendly}, reason: unknown")
       now = timestamp.now()
       filename = "null"
       filename_tmp = "null"

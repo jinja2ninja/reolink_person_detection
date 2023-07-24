@@ -31,7 +31,10 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
   
     success = False
     logging.debug(f"invalid image from camera")
-    os.remove(input_image[1])
+    try:
+      os.remove(input_image[1])
+    except:
+      pass
   else:
     _, scale = common.set_resized_input(
         interpreter, image.size, lambda size: image.resize(size, Image.ANTIALIAS))
