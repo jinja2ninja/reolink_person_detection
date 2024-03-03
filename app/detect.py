@@ -32,12 +32,15 @@ async def main():
     #except:
     #  logging.debug("mqtt publish not successful")
     try:
-      write_row(db_config, detection, item)
+      write_row(db_config, detection, item, config["log"])
       #logging.debug(detection) # seems redundant with line 27?
       if detection['success']:
         pub = publish_detection(mqtt_config, item, detection)
         logging.debug(f"MQTT Results: {pub}")
+        logging.info(f"Successul Detection: {detection}")
+        pass
       else:
+        logging.info(f"Unsuccessul Detection: {detection}")
         pass
     except:
       logging.debug(f"Database: no row added to database")

@@ -1,9 +1,11 @@
 import psycopg2
 import asyncio
 from psycopg2 import sql
+import logging
 
-
-def write_row(db_config, detection, camera):
+def write_row(db_config, detection, camera, log_level):
+  logging.basicConfig()
+  logging.getLogger().setLevel(log_level)
   conn = psycopg2.connect(
       host=db_config["host"],
       database=db_config["db"],
@@ -16,8 +18,6 @@ def write_row(db_config, detection, camera):
   table = (camera, )
   cur.execute(tablecheck, table)
   table_test = cur.fetchone()[0]
-  print(table_test)
-  print(camera)
   if not table_test:
    # print(f"{camera} table doesn't exist, creating it now")
     tablecreate = sql.SQL("""
@@ -34,9 +34,8 @@ def write_row(db_config, detection, camera):
         );""").format(camera=sql.Identifier(camera))
     table2 = (str(camera), )
     createtable = cur.execute(tablecreate, table)
-    print(tablecreate)
   else:
-    print(f"table: {camera} already exists, nothing to do.")
+    logging.debug(f"table: {camera} already exists, nothing to do.")
   row_query = sql.SQL("""
     INSERT INTO {camera} (filename, label, confidence, ymincoord, ymaxcoord, xmincoord, xmaxcoord, timestamp, success)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s );""").format(camera=sql.Identifier(camera))
