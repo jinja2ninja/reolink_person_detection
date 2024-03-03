@@ -4,9 +4,9 @@ import yaml
 import json
 from vault_secrets import get_secrets
 
-def read_config():
+def read_config(log_level):
   logging.basicConfig()
-  logging.getLogger().setLevel("DEBUG")
+  logging.getLogger().setLevel(log_level)
   try: 
     os.environ['DETECTOR_CONFIG_METHOD'] == "env"
     config_from_env = True
@@ -15,7 +15,6 @@ def read_config():
   if config_from_env:
     vault_address = os.environ['VAULT_ADDR']
     secrets = get_secrets(vault_address)
-    logging.info (secrets)
     config = {
       'database': {'password': secrets['data']['data']['pg_pass'], 'user': secrets['data']['data']['pg_user'], 'db': os.environ['DETECTOR_DB'], 'host': secrets['data']['data']['pg_host']}, 
       'mqtt': {'port': int(os.environ['DETECTOR_MQTT_PORT']), 'user': secrets['data']['data']['mqtt_user'], 'password': secrets['data']['data']['mqtt_pass'], 'broker': secrets['data']['data']['mqtt_host'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},

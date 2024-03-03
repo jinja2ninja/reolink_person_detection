@@ -11,5 +11,5 @@ def get_secrets(vault_address):
       secret_id=os.environ['SECRET_ID'],
   )
   
-  secrets = client.kv.read_secret(path='detector')
+  secrets = client.secrets.kv.v2.read_secret(path='detector')
   return secrets
