@@ -18,7 +18,7 @@ def read_config():
     logging.info (secrets)
     config = {
       'database': {'password': secrets['data']['data']['pg_pass'], 'user': secrets['data']['data']['pg_user'], 'db': os.environ['DETECTOR_DB'], 'host': secrets['data']['data']['pg_host']}, 
-      'mqtt': {'port': os.environ['DETECTOR_MQTT_PORT'], 'user': secrets['data']['data']['mqtt_user'], 'password': secrets['data']['data']['mqtt_pass'], 'broker': secrets['data']['data']['mqtt_host'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},
+      'mqtt': {'port': int(os.environ['DETECTOR_MQTT_PORT']), 'user': secrets['data']['data']['mqtt_user'], 'password': secrets['data']['data']['mqtt_pass'], 'broker': secrets['data']['data']['mqtt_host'], 'topic': os.environ['DETECTOR_MQTT_TOPIC'], 'client_name': os.environ['DETECTOR_MQTT_CLIENT_NAME']},
       'directory': os.environ['DETECTOR_DIRECTORY'],
       'interval': os.environ['DETECTOR_INTERVAL'],
       'model': os.environ['DETECTOR_MODEL'],    

@@ -36,7 +36,7 @@ async def main():
       logging.debug(detection)
       if detection['success']:
         pub = publish_detection(mqtt_config, item, detection)
-        logging.debug(pub)
+        logging.debug(f"MQTT Results: {pub}")
       else:
         pass
     except:
