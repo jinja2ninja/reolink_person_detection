@@ -1,7 +1,6 @@
 requests
 PyYAML
 fastapi
-uvicorn
 psycopg2-binary
-jinja2
 hvac
+nicegui

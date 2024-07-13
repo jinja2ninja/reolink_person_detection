@@ -1,9 +1,10 @@
 FROM ubuntu
 COPY requirements.txt /tmp/requirements.txt
-RUN apt update && apt install python3-pip -y && python3 -m pip install -r /tmp/requirements.txt
-RUN apt install -y vim
+RUN apt update && apt install python3-pip  python3-venv vim -y
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install -r /tmp/requirements.txt
 RUN mkdir -p /web/app
 COPY ./ /web/app
-RUN mv /web/app/run.sh /web/run.sh && chmod +x /web/run.sh
-WORKDIR /web
-ENTRYPOINT ["bash", "/web/run.sh"]
+WORKDIR /web/app
+ENV PATH="/opt/venv/bin:$PATH"
+ENTRYPOINT ["python3", "/web/app/main.py"]
