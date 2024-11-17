@@ -244,6 +244,7 @@ async def five_rows(request: Request,filename: str, camera: str):
   #filename = rows_list[0][0]
   cameras_list = await get_cameras()
   previous_image = await get_previous(camera,filename)
+  current_image = re.sub(r'^.*/', '', filename)
   logging.debug(f"previous image is {previous_image}")
-  return templates.TemplateResponse("detection_template_five_forward.html", {"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
+  return templates.TemplateResponse("detection_template_five_forward.html", {"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
 

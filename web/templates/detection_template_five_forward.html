@@ -18,7 +18,7 @@
           
           .side_navigation {   display: flex;
             flex-direction: column;
-             height: 87vh; /* Full viewport height or any specific height */
+             height: 90vh; /* Full viewport height or any specific height */
            }
           
           .photo { 
@@ -36,7 +36,7 @@
           .bottom_navigation { 
             grid-area: bottom_navigation;
             margin: auto;
-            width: 100%;
+            width: 90%;
           }
           .vertical-menu {
             flex-grow: 1; /* This will take up all available space except for the bottom link */
@@ -131,7 +131,7 @@
             width: 100%;
           }
           .bottom-link {
-           margin-top: auto; /* Pushes the link to the bottom */
+            vertical-align: bottom; /* Pushes the link to the bottom */
           }
   
       }
@@ -150,12 +150,14 @@
         </div>
         {% if previous_image == [] %}
         {% else %}
-        <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link">Back</a>
+        <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link"> Go Back <br>
+          <img class="navigation_picture" src='../.{{  previous_image[0][0] }}' alt="previous image">
+        </a>
         {% endif %}
       </div>
 
       <div class="photo">
-          <img class="picture" src='../.{{ rows_list[0][0] }}' </img>
+          <img class="picture" src="../../photos/{{ camera }}/{{ current_image }}.jpeg" </img>
       </div>
       
       <div class="bottom_navigation">
@@ -164,7 +166,7 @@
         {% for row in rows_list %}
             {% if row[0] in rows_list[0]  %}
             <div class="link_active">            
-              <a href="../detection{{  row[0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '') }}">
+              <a href="../detection{{  row[0] | replace('./photos/', '') | replace(camera_name, '') | replace('.jpeg', '') }}">
                 <img class="navigation_picture_active" src='../.{{  row[0]  }}' alt="latest image">
               </a>
             </div>
