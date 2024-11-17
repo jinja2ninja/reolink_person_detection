@@ -18,19 +18,16 @@ import hvac
 ############################
 # Hashicorp Vault Secret Retrevial
 ############################
+vault_addr = os.environ['VAULT_ADDR']
 client = hvac.Client(
-        url='https://vault.mischaf.us'
+        url=vault_addr,
+        cert=('/web/app/cert.pem', '/web/app/key.pem')
         )
 
-client.auth.approle.login(
-    role_id=os.environ['ROLE_ID'],
-    secret_id=os.environ['SECRET_ID'],
-)
-
-secrets = client.kv.read_secret(path='detector')
+client.auth.cert.login()
+secrets = client.secrets.kv.v2.read_secret(path='detector')
 logging.info(secrets)
-secrets = client.kv.read_secret(path='detector')
-
+secrets = client.secrets.kv.v2.read_secret(path='detector')
 ############################
 # Variable Declaration
 ############################
