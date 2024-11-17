@@ -110,6 +110,43 @@ async def get_previous(camera, filename):
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
+
+############################
+# Retrieve previous image
+############################
+async def get_next(camera, filename):
+  try:
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
+                                    port="5432",
+                                    database="detector")
+      filename = f"./photos/{camera}/{filename}.jpeg"
+      logging.debug(f"filename is {filename}")
+      cursor = connection.cursor()
+      table = camera.replace("'", "")
+  
+      cursor.execute(
+          """
+          SELECT * 
+          FROM %s 
+          WHERE TIMESTAMP < (
+              SELECT TIMESTAMP 
+              FROM %s 
+              WHERE filename = %s
+          )
+          ORDER BY TIMESTAMP DESC
+          LIMIT 1;
+          """,
+          [AsIs(table), AsIs(table), filename]
+      )
+      next_image = cursor.fetchall()
+      return next_image
+  except (Exception, psycopg2.Error) as error:
+      logging.error("Error while fetching data from PostgreSQL", error)
+
+
+
 ############################
 # Retrieve DB Rows for "latest" page
 ############################
@@ -245,6 +282,7 @@ async def five_rows(request: Request,filename: str, camera: str):
   cameras_list = await get_cameras()
   previous_image = await get_previous(camera,filename)
   current_image = re.sub(r'^.*/', '', filename)
+  next_image = await get_next(camera,filename)
   logging.debug(f"previous image is {previous_image}")
-  return templates.TemplateResponse("detection_template_five_forward.html", {"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
+  return templates.TemplateResponse("detection_template_five_forward.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
 

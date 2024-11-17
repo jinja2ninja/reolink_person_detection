@@ -36,7 +36,7 @@
           .bottom_navigation { 
             grid-area: bottom_navigation;
             margin: auto;
-            width: 90%;
+            width: 100%;
           }
           .vertical-menu {
             flex-grow: 1; /* This will take up all available space except for the bottom link */
@@ -148,12 +148,7 @@
           <a href="../../{{ camera_name }}/detection/latest">{{ camera_name }}</a>
           {% endfor %}
         </div>
-        {% if previous_image == [] %}
-        {% else %}
-        <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link"> Go Back <br>
-          <img class="navigation_picture" src='../.{{  previous_image[0][0] }}' alt="previous image">
-        </a>
-        {% endif %}
+
       </div>
 
       <div class="photo">
@@ -163,21 +158,26 @@
       <div class="bottom_navigation">
         <div class="scrollmenu">
 
-        {% for row in rows_list %}
-            {% if row[0] in rows_list[0]  %}
-            <div class="link_active">            
-              <a href="../detection{{  row[0] | replace('./photos/', '') | replace(camera_name, '') | replace('.jpeg', '') }}">
-                <img class="navigation_picture_active" src='../.{{  row[0]  }}' alt="latest image">
-              </a>
-            </div>
+# previous
+            {% if previous_image == [] %}
             {% else %}
-            <div class="link">              
-              <a href="../detection{{  row[0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '') }}">
-                <img class="navigation_picture" src='../.{{  row[0]  }}' alt="image">
+            <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link"> Previous <br>
+              <img class="navigation_picture" src='../.{{  previous_image[0][0] }}' alt="previous image">
+            </a>
+            {% endif %}
+# current
+            <div class="link_active">            
+              <a href="../detection{{  current_image[0] | replace('./photos/', '') | replace(camera_name, '') | replace('.jpeg', '') }}">
+                <img class="navigation_picture_active" src="../../photos/{{ camera }}/{{ current_image }}.jpeg" alt="latest image">
               </a>
             </div>
+# next
+            {% if next_image == [] %}
+            {% else %}
+            <a href="../detection{{ next_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link"> Next <br>
+              <img class="navigation_picture" src='../.{{  next_image[0][0] }}' alt="previous image">
+            </a>
             {% endif %}
-        {% endfor %}
       </div> 
       </div>
     </div>
