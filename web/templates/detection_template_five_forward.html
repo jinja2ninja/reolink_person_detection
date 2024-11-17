@@ -16,7 +16,10 @@
               "side_navigation bottom_navigation bottom_navigation";
           }
           
-          .side_navigation { grid-area: side_navigation; }
+          .side_navigation {   display: flex;
+            flex-direction: column;
+             height: 87vh; /* Full viewport height or any specific height */
+           }
           
           .photo { 
               grid-area: photo; 
@@ -36,8 +39,9 @@
             width: 100%;
           }
           .vertical-menu {
-            width: 100%; /* Set a width if you like */
-            background-color: #eee;
+            flex-grow: 1; /* This will take up all available space except for the bottom link */
+            display: flex;
+            flex-direction: column;
           }
           
           .vertical-menu a {
@@ -126,7 +130,9 @@
             margin: auto;
             width: 100%;
           }
-
+          .bottom-link {
+           margin-top: auto; /* Pushes the link to the bottom */
+          }
   
       }
 
@@ -141,8 +147,11 @@
           {% for camera_name in cameras_list %}
           <a href="../../{{ camera_name }}/detection/latest">{{ camera_name }}</a>
           {% endfor %}
-          <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}">Back</a>
         </div>
+        {% if previous_image == [] %}
+        {% else %}
+        <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link">Back</a>
+        {% endif %}
       </div>
 
       <div class="photo">
