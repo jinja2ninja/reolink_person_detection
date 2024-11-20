@@ -1,26 +1,35 @@
 <style>
+body {
+  background-color: #302f2e;
+}
   .flex-container {
       display: flex;
-      background-color: #bbdefb;
-      height: 100%;
+      background-color: #302f2e;
+      height: 95%;
       padding: 5px;
       gap: 2px;
+      
   }
-  
+  .flex-container a {
+    display: block;
+    white-space: nowrap;
+    text-decoration: none;
+  }
   .inner-flex-container {
       display: flex;
-      background-color: #bbdefb;
+      background-color: #302f2e;
       height: 100%;
-      padding: 5px;
+      /* padding: 5px; */
       gap: 2px;
       flex: 1;
   }
   
   .inner-flex-container > div {
-      background: #ffecb3;
-      border: 1px solid #ffcc80;
+      background: #302f2e;
+      border: 1px solid hsl(60, 1%, 19%);
       border-radius: 3px;
-      padding: 2px;
+      /* padding: 2px; */
+      height: 100%
   }
   
   .inner-flex-container img {
@@ -29,7 +38,9 @@
       object-fit: contain;
       max-height: 40vh;
   }
-  
+  .menu_item {
+    background-color: #63482e; 
+  }
   .previous, .next {
       flex: 1; /* Side images take 1 part each */
   }
@@ -38,20 +49,34 @@
       flex: 4; /* Middle image takes 2 parts (making it twice as wide) */
   }
   .current img{
-    max-height: 90vh
+    max-height: 95vh
   }
   .side img{
     max-height: 50vh
   }
+
+  .list-item
+{
+    float: left;
+    clear: left;
+    list-style-type: none;
+}
   </style>
   
   <div class="flex-container">
-      <div class="item1">item 1</div>
+        <ul>
+        {% for camera_name in cameras_list %}
+        <a class="menu_item" href="../../{{ camera_name }}/detection/latest">{{ camera_name }}</a><br>
+        {% endfor %}
+        </ul>
       <div class="inner-flex-container">
        
         <div class="previous">
+          {% if previous_image == [] %}
+          {% else %}
             <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link"> Previous <br>
             <img class="navigation_picture" src='../.{{  previous_image[0][0] }}' alt="previous image">
+          {% endif %}
           </a>
         </div>
         <div class="current">
@@ -59,8 +84,11 @@
           </a>
         </div>
         <div class="next">
+          {% if next_image == [] %}
+          {% else %}
           Next<br><a href="../detection{{ next_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}" class="bottom-link">
           <img class="navigation_picture" src='../.{{  next_image[0][0] }}' alt="previous image">
+          {% endif %}
         </div>
       
     </div>

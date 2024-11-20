@@ -258,7 +258,12 @@ async def latest(request: Request, camera: str):
   latest_rows = await read_latest_rows(camera)
   filename = latest_rows[0][0]
   cameras_list = await get_cameras()
-  return templates.TemplateResponse("detection_template_latest.html", {"request": request, "cameras_list": cameras_list, "filename": filename, "latest_rows": latest_rows, "camera": camera})
+  previous_image = await get_previous(camera,filename)
+  current_image = re.sub(r'^.*/', '', filename).rstrip(".jpeg")
+  next_image = await get_next(camera,current_image)
+  logging.debug(f"previous image is {previous_image}")
+  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list, "camera": camera})
+
 
 ############################
 # "Detection" Page
@@ -284,5 +289,5 @@ async def five_rows(request: Request,filename: str, camera: str):
   current_image = re.sub(r'^.*/', '', filename)
   next_image = await get_next(camera,filename)
   logging.debug(f"previous image is {previous_image}")
-  return templates.TemplateResponse("detection_template_five_forward.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
+  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
 
