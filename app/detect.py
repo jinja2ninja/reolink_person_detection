@@ -37,10 +37,10 @@ async def main():
       if detection['success']:
         pub = publish_detection(mqtt_config, item, detection)
         logging.debug(f"MQTT Results: {pub}")
-        logging.info(f"Successul Detection: {detection}")
+        logging.info(f"Successful Detection: {detection}")
         pass
       else:
-        logging.info(f"Unsuccessul Detection: {detection}")
+        logging.info(f"Unsuccessful Detection: {detection}")
         pass
     except:
       logging.debug(f"Database: no row added to database")
