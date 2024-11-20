@@ -39,42 +39,6 @@ app.mount("/photos", StaticFiles(directory="/web/app/photos"), name="photos")
 app.mount("/templates", StaticFiles(directory="/web/app/templates"), name="templates")
 api_router = APIRouter()
 
-
-
-############################
-# Retrieve list of 5 DB rows going forward
-############################
-async def read_rows_forward(camera, filename):
-  try:
-      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
-                                    password=secrets['data']['data']["pg_pass"],
-                                    host=secrets['data']['data']["pg_host"],
-                                    port="5432",
-                                    database="detector")
-      cursor = connection.cursor()
-      table = camera.replace("'", "")
-      filename = f"./photos/{camera}/{filename}.jpeg"
-      logging.debug(f"filename is {filename}")
-      cursor.execute(
-        """
-        SELECT * 
-        FROM %s 
-        WHERE TIMESTAMP <= (
-            SELECT TIMESTAMP 
-            FROM %s 
-            WHERE filename = %s
-        )
-        ORDER BY TIMESTAMP DESC 
-        LIMIT 5;
-        """,
-        [AsIs(table), AsIs(table), filename]
-    )
-
-      five_rows = cursor.fetchall()
-      logging.debug(f"five rows result: {five_rows}")
-      return five_rows
-  except (Exception, psycopg2.Error) as error:
-      logging.error("Error while fetching data from PostgreSQL", error)
 ############################
 # Retrieve previous image
 ############################
@@ -112,7 +76,7 @@ async def get_previous(camera, filename):
 
 
 ############################
-# Retrieve previous image
+# Retrieve next image
 ############################
 async def get_next(camera, filename):
   try:
@@ -172,54 +136,6 @@ async def read_latest_rows(camera):
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
-############################
-# Retrieve DB Rows for "detection" page
-############################
-async def read_rows(filename, camera):
-  try:
-      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
-                                    password=secrets['data']['data']["pg_pass"],
-                                    host=secrets['data']['data']["pg_host"],
-                                    port="5432",
-                                    database="detector")
-      cursor = connection.cursor()
-      table = camera.replace("'", "")
-      cursor.execute(
-          """
-        WITH init AS (
-            SELECT timestamp
-            FROM %s
-            WHERE filename = %s
-         )
-         
-         (
-            (SELECT %s.*
-             FROM %s
-                CROSS JOIN init
-             WHERE %s.timestamp > init.timestamp
-             ORDER BY %s.timestamp DESC 
-             LIMIT 2)
-           UNION ALL
-         (
-            SELECT %s.*
-            FROM %s
-            WHERE filename = %s
-         )
-          UNION ALL 
-            (SELECT %s.*
-             FROM %s
-                CROSS JOIN init 
-             WHERE %s.timestamp < init.timestamp
-             ORDER BY %s.timestamp DESC
-             LIMIT 2)
-         );
-          """,
-          [AsIs(table), filename, AsIs(table), AsIs(table), AsIs(table), AsIs(table), AsIs(table), AsIs(table), filename, AsIs(table), AsIs(table), AsIs(table), AsIs(table)]
-      )
-      rows = cursor.fetchall()
-      return rows
-  except (Exception, psycopg2.Error) as error:
-      logging.error("Error while fetching data from PostgreSQL", error)
 
 ############################
 # Retrieve list of cameras from DB
@@ -264,30 +180,13 @@ async def latest(request: Request, camera: str):
   logging.debug(f"previous image is {previous_image}")
   return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list, "camera": camera})
 
-
 ############################
-# "Detection" Page
-############################
-#@app.get("/{camera}/detection/{filename}", response_class=HTMLResponse)
-#async def detection(request: Request, filename: str, camera: str):
-#  filename_full = f"./photos/{camera}/{filename}.jpeg"
-#  rows = await read_rows(filename_full, camera)
-#  cameras_list = await get_cameras()
-#  return templates.TemplateResponse("detection_template.html", {"request": request, "cameras_list": cameras_list, "filename": filename, "rows": rows, "camera": camera})
-
-
-############################
-# "Latest" Page
+# detection Page
 ############################
 @app.get("/{camera}/detection/{filename}", response_class=HTMLResponse)
 async def five_rows(request: Request,filename: str, camera: str):
-  rows_list = await read_rows_forward(camera, filename)
-  logging.debug(rows_list)
-  #filename = rows_list[0][0]
-  cameras_list = await get_cameras()
   previous_image = await get_previous(camera,filename)
   current_image = re.sub(r'^.*/', '', filename)
   next_image = await get_next(camera,filename)
-  logging.debug(f"previous image is {previous_image}")
-  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list,  "rows_list": rows_list, "camera": camera})
-
+  cameras_list = await get_cameras()
+  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list, "camera": camera})
