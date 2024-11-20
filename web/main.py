@@ -11,29 +11,103 @@ import re
 ############################
 # Hashicorp Vault Secret Retrevial
 ############################
+vault_addr = os.environ['VAULT_ADDR']
 client = hvac.Client(
-        url='https://vault.mischaf.us'
+        url=vault_addr,
+        cert=('/web/app/cert.pem', '/web/app/key.pem')
         )
-client.auth.approle.login(
-    role_id=os.environ['ROLE_ID'],
-    secret_id=os.environ['SECRET_ID'],
-)
+
+client.auth.cert.login()
 secrets = client.secrets.kv.v2.read_secret(path='detector')
 logging.info(secrets)
 secrets = client.secrets.kv.v2.read_secret(path='detector')
-
 ############################
 # Logging Config
 ############################
 logging.basicConfig()
 logging.getLogger().setLevel("DEBUG")
+templates = Jinja2Templates(directory="/web/app/templates")
+app = FastAPI()
+app.mount("/photos", StaticFiles(directory="/web/app/photos"), name="photos")
+app.mount("/templates", StaticFiles(directory="/web/app/templates"), name="templates")
+api_router = APIRouter()
+
+############################
+# Retrieve previous image
+############################
+async def get_previous(camera, filename):
+  try:
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
+                                    port="5432",
+                                    database="detector")
+      filename = f"./photos/{camera}/{filename}.jpeg"
+      logging.debug(f"filename is {filename}")
+      cursor = connection.cursor()
+      table = camera.replace("'", "")
+  
+      cursor.execute(
+          """
+          SELECT * 
+          FROM %s 
+          WHERE TIMESTAMP > (
+              SELECT TIMESTAMP 
+              FROM %s 
+              WHERE filename = %s
+          )
+          ORDER BY TIMESTAMP ASC
+          LIMIT 1;
+          """,
+          [AsIs(table), AsIs(table), filename]
+      )
+      previous_image = cursor.fetchall()
+      logging.debug(f"five rows result: {five_rows}")
+      return previous_image
+  except (Exception, psycopg2.Error) as error:
+      logging.error("Error while fetching data from PostgreSQL", error)
 
 
-##############################
-# Images List
-##############################
-## create images list
-def read_latest_rows(camera):
+############################
+# Retrieve next image
+############################
+async def get_next(camera, filename):
+  try:
+      connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
+                                    password=secrets['data']['data']["pg_pass"],
+                                    host=secrets['data']['data']["pg_host"],
+                                    port="5432",
+                                    database="detector")
+      filename = f"./photos/{camera}/{filename}.jpeg"
+      logging.debug(f"filename is {filename}")
+      cursor = connection.cursor()
+      table = camera.replace("'", "")
+  
+      cursor.execute(
+          """
+          SELECT * 
+          FROM %s 
+          WHERE TIMESTAMP < (
+              SELECT TIMESTAMP 
+              FROM %s 
+              WHERE filename = %s
+          )
+          ORDER BY TIMESTAMP DESC
+          LIMIT 1;
+          """,
+          [AsIs(table), AsIs(table), filename]
+      )
+      next_image = cursor.fetchall()
+      return next_image
+  except (Exception, psycopg2.Error) as error:
+      logging.error("Error while fetching data from PostgreSQL", error)
+
+
+
+############################
+# Retrieve DB Rows for "latest" page
+############################
+async def read_latest_rows(camera):
   try:
       connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
                                     password=secrets['data']['data']["pg_pass"],
@@ -45,26 +119,21 @@ def read_latest_rows(camera):
       cursor.execute(
           """
         SELECT * from %s
-        ORDER BY TIMESTAMP DESC;
+        ORDER BY TIMESTAMP DESC LIMIT 5;
           """,
           [AsIs(table)]
       )
       latest_rows = cursor.fetchall()
-      #logging.debug(latest_rows)
+      logging.debug(latest_rows)
       return latest_rows
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
-def create_images_list(camera):
-  latest_rows = read_latest_rows(camera)
-  #image_paths = list(latest_rows[0])
-  image_paths = []
-  for row in latest_rows:
-    image_paths.append(row[0])
-  return(image_paths)
-#####################################
-# Camera List
-#####################################
-def get_cameras():
+
+
+############################
+# Retrieve list of cameras from DB
+############################
+async def get_cameras():
   try:
       connection = psycopg2.connect(user=secrets['data']['data']["pg_user"],
                                     password=secrets['data']['data']["pg_pass"],
@@ -90,55 +159,27 @@ def get_cameras():
   except (Exception, psycopg2.Error) as error:
       logging.error("Error while fetching data from PostgreSQL", error)
 
-#######################################
-# Create Image Lists
-#######################################
-cameras = get_cameras()
-images = {}
-for camera in cameras:
-  image_list = create_images_list(camera)
-  images[f'{camera}'] = image_list
+############################
+# "Latest" Page
+############################
+@app.get("/{camera}/detection/latest", response_class=HTMLResponse)
+async def latest(request: Request, camera: str):
+  latest_rows = await read_latest_rows(camera)
+  filename = latest_rows[0][0]
+  cameras_list = await get_cameras()
+  previous_image = await get_previous(camera,filename)
+  current_image = re.sub(r'^.*/', '', filename).rstrip(".jpeg")
+  next_image = await get_next(camera,current_image)
+  logging.debug(f"previous image is {previous_image}")
+  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list, "camera": camera})
 
-print(images)
-
-######################################
-# Nice UI
-######################################
-@ui.page('/', response_timeout = 99)
-
-async def page():
-    async def check(image_iterator, camera):
-        try:
-            result = await ui.run_javascript('window.pageYOffset >= document.body.offsetHeight - 2 * window.innerHeight')
-            logging.debug(f'JavaScript result for {camera}: {result}')
-            if result:
-                next_image = next(image_iterator)
-                logging.debug(f'Next image for {camera}: {next_image}')
-                ui.image(next_image)
-        except TimeoutError:
-            logging.error('TimeoutError: The client might have disconnected')
-        except Exception as e:
-            logging.error(f'Exception occurred: {e}')
-
-    await ui.context.client.connected()
-    dark = ui.dark_mode()
-    ui.page_title('Person Detector')
-    with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
-        ui.label('Person Detector')
-        with ui.tabs() as tabs:
-          for camera in cameras:
-              ui.tab(re.sub(r'_', ' ', camera))
-        with ui.row():
-          ui.button('Dark Mode', on_click=dark.enable)
-          ui.button('Light Mode', on_click=dark.disable)
-    with ui.footer(value=False) as footer:
-        ui.label('Footer')
-    with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
-        ui.button(on_click=footer.toggle, icon='contact_support').props('fab')
-    with ui.tab_panels(tabs, value=cameras[0]).classes('w-full'):
-        for camera in cameras:
-            with ui.tab_panel(re.sub(r'_', ' ', camera)):
-                image_iterator = cycle(images[camera])
-                ui.timer(1.1, lambda it=image_iterator, cam=camera: check(it, cam))
-
-ui.run()
+############################
+# detection Page
+############################
+@app.get("/{camera}/detection/{filename}", response_class=HTMLResponse)
+async def five_rows(request: Request,filename: str, camera: str):
+  previous_image = await get_previous(camera,filename)
+  current_image = re.sub(r'^.*/', '', filename)
+  next_image = await get_next(camera,filename)
+  cameras_list = await get_cameras()
+  return templates.TemplateResponse("template.html", {"next_image": next_image,"current_image": current_image,"previous_image": previous_image,"request": request, "cameras_list": cameras_list, "camera": camera})

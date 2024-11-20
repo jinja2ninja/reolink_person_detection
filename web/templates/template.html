@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Person Detection</title>
+    <style>
+        body {
+          background-color: #302f2e;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+        body, html {
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+        }
+        .vertical-menu {
+            width: 20vw;
+            min-width: 150px;
+            max-width: 250px;
+            background-color: #423e3e;
+            display: flex;
+            flex-direction: column;
+        }
+        .menu-item {
+            padding: 3vh;
+            border-bottom: 1px solid #ddd;
+        }
+        .content {
+            flex-grow: 1;
+            display: flex;
+            padding: 2vw;
+            gap: 2vw;
+            align-items: center;
+            justify-content: center;
+        }
+        .side-square, .large-square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .side-square {
+            background-color: #302f2e;
+            width: 15vw;
+            height: 15vw;
+            max-width: 200px;
+            max-height: 200px;
+            text-align: center;
+        }
+        .large-square {
+            background-color: #302f2e;
+            width: 60vw;
+            height: 60vw;
+            /*max-width: 600px; */
+            /*max-height: 600px; */
+        }
+        .content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .vertical-menu {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            .content {
+                flex-direction: column;
+                height: auto;
+            }
+            .side-square, .large-square {
+                width: 80vw;
+                height: 80vw;
+                max-width: none;
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="vertical-menu">
+            {% for camera_name in cameras_list %}
+            <div class="menu-item">
+                <a href="../../{{ camera_name }}/detection/latest">{{ camera_name }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="content">
+            <div class="side-square">
+                {% if previous_image == [] %}
+                {% else %}
+                  <a href="../detection{{ previous_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}"> Previous <br>
+                  <img class="navigation_picture" src='../.{{  previous_image[0][0] }}' alt="previous image">
+                {% endif %}
+            </div>
+            <div class="large-square">
+                <img class="navigation_picture_active" src="../../photos/{{ camera }}/{{ current_image }}.jpeg" alt="latest image">
+            </div>
+            <div class="side-square">
+                {% if next_image == [] %}
+                {% else %}
+                <a href="../detection{{ next_image[0][0] | replace('./photos/', '') | replace(camera, '') | replace('.jpeg', '')}}"> Next <br>
+                <img class="navigation_picture" src='../.{{  next_image[0][0] }}' alt="previous image">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
