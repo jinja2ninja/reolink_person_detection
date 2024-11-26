@@ -14,10 +14,33 @@ from pycoral.utils.dataset import read_label_file
 from pycoral.utils.edgetpu import make_interpreter
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 import asyncio
+import threading
+from write_row import write_row
+import traceback
 
-async def detect_object_coral(labels, model, input_image, count, threshold, thing, add_labels):
+def process_results(db_config, detection, camera, log_level):
+  try:
+    logging.debug(f"detection data type: {type(detection)}")
+    write_row(db_config, detection, camera, log_level)
+    if detection['success']:
+      #pub = publish_detection(mqtt_config, camera, detection)
+      #logging.debug(f"MQTT Results: {pub}")
+      #logging.info(f"Successful Detection: {detection}")
+      pass
+    else:
+      logging.info(f"Unsuccessful Detection: {detection}")
+      pass
+  except Exception as e:
+    logging.error(f"Database: no row added to database. Reason: {e}")
+    logging.error(traceback.format_exc())
+    logging.debug(f"config type: {type(db_config)}")
+    logging.debug(f"detection: {detection}")
+    logging.debug(f"camera type: {type(camera)}")
+    pass
+
+def detect_tpu(db_config, camera, log_level, labels, model, input_image, count, threshold, thing, add_labels, tpu):
   labels = read_label_file(labels) if labels else {}
-  interpreter = make_interpreter(model)
+  interpreter = make_interpreter(model, device=tpu)
   interpreter.allocate_tensors()
   try:
     image = Image.open(input_image[1])
@@ -28,7 +51,6 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
   except TypeError:
       image = "null"
   if image == "null":
-  
     success = False
     logging.debug(f"invalid image from camera")
     try:
@@ -46,40 +68,38 @@ async def detect_object_coral(labels, model, input_image, count, threshold, thin
       logging.debug(f"{objs}")
       if not objs:
         success = False
-        logging.debug(f"No objects detected, deleting {input_image[1]}")
+        logging.debug(f"No objects detected, attempting to delete {input_image[1]}")
         #os.remove(input_image[1])
       else:
         logging.debug("success")
-        success = True
         for obj in objs:
           label = (labels.get(obj.id))
           logging.debug(label)
           if label == thing:
-            logging.debug("yes")
+            success = True
+            logging.debug(f"success: {success}")
             confidence = round((obj.score * 100))
             xmax = obj.bbox.xmax
             xmin = obj.bbox.xmin
             ymax =  obj.bbox.ymax
             ymin = obj.bbox.ymin
-
             filename = input_image[0]
             filename_tmp = input_image[1]
             now = input_image[2]
+            
             detection = {'predictions': [{'x_max': xmax, 'x_min': xmin, 'y_max': ymax,  'y_min': ymin, 'label': label, 'confidence': confidence }], 'success': success}
             logging.debug(f"Object Detected! File saved as {input_image[0]}")
             logging.debug(f"Detection details: {detection}")
             draw_objects_coral(objs, input_image, label, add_labels)
-            #os.remove(filename_tmp)
-            return {'label': thing, 'confidence': confidence, 'ymincoord': ymin, 'ymaxcoord': ymax, 'xmincoord': xmin, 'xmaxcoord': xmax, 'timestamp': now, 'filename': filename, 'success': success}
+            result = {'label': thing, 'confidence': confidence, 'ymincoord': ymin, 'ymaxcoord': ymax, 'xmincoord': xmin, 'xmaxcoord': xmax, 'timestamp': now, 'filename': filename, 'success': success}
+            process_results(db_config, result, camera, log_level)
           else:
             logging.debug(f"{label}    {thing}")
             success = False
-            logging.debug(f"No objects detected, deleting {input_image[1]}")
             try:
-              logging.debug("this is a test")
+              logging.debug(f"No objects detected, attempting to delete {input_image[1]}")
             except:
               logging.debug(f"unable to delete {input_image[1]}")
-
 
 async def detect_object_deepstack(deepstack_url, input_image, object, add_labels, threshold):
   try:

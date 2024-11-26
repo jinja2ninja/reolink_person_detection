@@ -2,11 +2,13 @@ import asyncio
 import read_config
 from grab_jpeg import grab_jpeg
 from reset_directories import reset_directories
-from process_image import detect_object_deepstack, detect_object_coral
+from process_image import detect_object_deepstack, detect_tpu
 import logging
 from write_row import write_row
 from mqtt import publish_detection, on_connect
 import os
+import threading
+import time
 
 log_level = os.environ['DETECTOR_LOG']
 config = read_config.read_config(log_level)
@@ -17,34 +19,29 @@ db_config = {'password': config['database']['password'], 'db': config['database'
 mqtt_config = {'client_name': config['mqtt']['client_name'],'topic': config['mqtt']['topic'], 'user':  config['mqtt']['user'], 'password':  config['mqtt']['password'], 'broker': config['mqtt']['broker'], 'port': config['mqtt']['port']}
 async def main():
   logging.debug(f"Configured cameras:   {cameras}")
-  for item in cameras:
-    reset_directories(config["directory"], item)
-    image =  await grab_jpeg(item, cameras[item]["ip"], cameras[item]["pass"], cameras[item]["user"], config["directory"], config["log"], config["timeout"])
+  start = time.time()
+  for camera in cameras:
+    reset_directories(config["directory"], camera)
+    image =  await grab_jpeg(camera, cameras[camera]["ip"], cameras[camera]["pass"], cameras[camera]["user"], config["directory"], config["log"], config["timeout"])
     if config['method'] == "deepstack":
       logging.debug(f"using method {config['method']}")
-      detection = await detect_object_deepstack(config['deepstack_url'], image, config['object'], config['add_labels'], cameras[item]["threshold"])
+      detection = await detect_object_deepstack(config['deepstack_url'], image, config['object'], config['add_labels'], cameras[camera]["threshold"])
     elif config['method'] == "coral":
       logging.debug(f"using method {config['method']}")
-      detection = await detect_object_coral(config["labels"], config["model"], image, cameras[item]["count"], cameras[item]["threshold"], config["object"], config["add_labels"])
-    logging.debug(f"Detection Results: {detection}")
-
-
-    #except:
-    #  logging.debug("mqtt publish not successful")
-    try:
-      write_row(db_config, detection, item, config["log"])
-      #logging.debug(detection) # seems redundant with line 27?
-      if detection['success']:
-        pub = publish_detection(mqtt_config, item, detection)
-        logging.debug(f"MQTT Results: {pub}")
-        logging.info(f"Successful Detection: {detection}")
-        pass
-      else:
-        logging.info(f"Unsuccessful Detection: {detection}")
-        pass
-    except:
-      logging.debug(f"Database: no row added to database")
-      pass
+      tpu0_thread = threading.Thread(
+          target=detect_tpu,
+          args=(db_config, camera, config["log"], config["labels"], config["model"], image, cameras[camera]["count"], cameras[camera]["threshold"], config["object"], config["add_labels"], ':1'))
+      tpu1_thread = threading.Thread(
+          target=detect_tpu,
+          args=(db_config, camera, config["log"], config["labels"], config["model"], image, cameras[camera]["count"], cameras[camera]["threshold"], config["object"], config["add_labels"], ':1'))
+      result = [None]
+      tpu0_thread.start()
+      tpu1_thread.start()
+      tpu0_thread.join()
+      tpu1_thread.join()
+      end = time.time()
+      run_time = end - start
+      logging.debug(f"run time was: {run_time}")
 
 while True:
   if __name__ == '__main__':
